@@ -1,0 +1,19 @@
+/**
+ * This is used in a carry lookahead where
+ * c(i) = p(i) + p(i) * c(i-1)
+ * p(i) = a(i) + b(i)
+ * g(i) = a(i) * b(i)
+ */
+
+CHIP PartialFullAdder {
+    IN a, b, c;  // 1-bit inputs
+    OUT sum,     // Right bit of a + b + c
+        propogate, // Will the calculation propogate a carry with the previous sum
+        generate; // Will the calculation generate a carry on it's own
+
+    PARTS:
+    HalfAdder(a=a, b=b, sum=HalfAdderab, carry=generate);
+    Or(a=a, b=b, out=propogate);
+
+    Xor(a=HalfAdderab, b=c, out=sum);
+}
