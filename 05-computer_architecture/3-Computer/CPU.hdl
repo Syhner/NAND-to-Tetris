@@ -73,6 +73,6 @@ CHIP CPU {
     Or(a=JLE, b=JGT, out=jumpConditionMet);
     // PCload = C-instruction && jump condition met
     And(a=Cins, b=jumpConditionMet, out=PCload);
-    // PC = reset || (PCload && A) || PC++
+    // PC = (reset && 0) || (PCload && A) || PC++
     PC(in=A, load=PCload, inc=true, reset=reset , out[0..14]=pc);
 }
