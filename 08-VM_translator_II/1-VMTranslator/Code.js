@@ -9,9 +9,9 @@ class CodeWriter {
 
     this.output = [];
     this.compareCounter = 0;
-    this.functionCounter = 0;
+    this.callCounter = 0;
 
-    // this.writeInit();
+    this.writeInit();
   }
 
   comment(line) {
@@ -53,24 +53,24 @@ class CodeWriter {
   compareOp(condition) {
     this.compareCounter++;
 
-    const currentTrue = `TRUE.${this.compareCounter}`;
-    const currentContinue = `CONTINUE.${this.compareCounter}`;
+    const currTrue = `TRUE.${this.compareCounter}`;
+    const currContinue = `CONTINUE.${this.compareCounter}`;
 
     this.popFromStack();
     this.accessTop();
     this.output.push('D=M-D');
     // Jump to true block if conditional is true
-    this.output.push(`@${currentTrue}`, `D;${condition}`);
+    this.output.push(`@${currTrue}`, `D;${condition}`);
     // False block
     this.output.push('@SP', 'A=M', `M=0`);
     this.incrementStackPointer();
-    this.output.push(`@${currentContinue}`, '0;JMP');
+    this.output.push(`@${currContinue}`, '0;JMP');
     // True block
-    this.output.push(`(${currentTrue})`);
+    this.output.push(`(${currTrue})`);
     this.output.push('@SP', 'A=M', `M=-1`);
     this.incrementStackPointer();
     // Continue if false
-    this.output.push(`(${currentContinue})`);
+    this.output.push(`(${currContinue})`);
   }
 
   // Writes to the output file the assembly code
@@ -116,7 +116,7 @@ class CodeWriter {
   // Writes to the output file the assembly code
   // that implements the given command, where
   // command is either C_PUSH or C_POP
-  writePushPop(command, segment, int) {
+  writePushPop(command, segment, int, currentFileName) {
     switch (segment) {
       case 'local':
       case 'argument':
@@ -143,11 +143,11 @@ class CodeWriter {
 
       case 'static':
         if (command === 'C_PUSH') {
-          this.output.push(`@${this.fileName}.${int}`, 'D=M');
+          this.output.push(`@${currentFileName}.${int}`, 'D=M');
           this.pushToStack();
         } else {
           this.popFromStack();
-          this.output.push(`@${this.fileName}.${int}`, 'M=D');
+          this.output.push(`@${currentFileName}.${int}`, 'M=D');
         }
         break;
 
@@ -170,7 +170,7 @@ class CodeWriter {
           this.pushToStack();
         } else {
           this.int(int);
-          this.output.push('@R5', 'A=D+A', 'D=M', '@R13', 'M=D');
+          this.output.push('@R5', 'D=D+A', '@R13', 'M=D');
           this.popFromStack();
           this.output.push('@R13', 'A=M', 'M=D');
         }
@@ -216,10 +216,10 @@ class CodeWriter {
   }
 
   writeCall(functionName, numArgs) {
-    this.functionCounter++;
+    this.callCounter++;
 
     // Push return address
-    this.output.push(`@RETURN.${this.functionCounter}`, 'D=A');
+    this.output.push(`@RETURN.${this.callCounter}`, 'D=A');
     this.pushToStack();
 
     // Save pointers
@@ -239,7 +239,7 @@ class CodeWriter {
     this.writeGoto(functionName);
 
     // Declare label for return address
-    this.writeLabel(`RETURN.${this.functionCounter}`);
+    this.writeLabel(`RETURN.${this.callCounter}`);
   }
 
   writeReturn() {

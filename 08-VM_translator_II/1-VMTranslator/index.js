@@ -12,12 +12,21 @@ while (parser.hasMoreCommands()) {
   parser.advance();
   const commandType = parser.commandType();
 
-  if (commandType !== 'BLANK') code.comment(parser.currentCmd);
+  if (commandType !== 'BLANK') code.comment(parser.currCmd);
 
   switch (commandType) {
     case 'C_PUSH':
     case 'C_POP':
-      code.writePushPop(parser.commandType(), parser.arg1, parser.arg2);
+      const { fileName: currFileName } = getFiles(
+        `${filePaths[parser.currFileIdx]}`
+      );
+
+      code.writePushPop(
+        parser.commandType(),
+        parser.arg1,
+        parser.arg2,
+        currFileName
+      );
       break;
 
     case 'C_ARITHMETIC':

@@ -3,37 +3,51 @@ const fs = require('fs');
 class Parser {
   /* Opens the input file and gets ready to parse it. */
   constructor(filePaths) {
-    this.file = filePaths
-      .map(filePath => fs.readFileSync(filePath, 'utf-8').split(/[\r\n]+/))
-      .flat();
+    this.files = filePaths.map(filePath =>
+      fs.readFileSync(filePath, 'utf-8').split(/[\r\n]+/)
+    );
 
-    this.totalLines = this.file.length;
-    this.currentLineNumber = 0;
+    this.currFileIdx = 0;
+    this.currFile = this.files[this.currFileIdx];
+    this.currFileLines = this.currFile.length;
+    this.currLineNumber = 0;
   }
 
   /* Are there more commands in the input */
   hasMoreCommands() {
-    return this.currentLineNumber < this.totalLines;
+    return (
+      this.currFileIdx !== this.files.length - 1 ||
+      this.currLineNumber < this.currFileLines
+    );
   }
 
   /* Reads the next command from the input and makes it the current command. 
   Should be called only if hasMoreCommands() is true. Initially there is no
   current command. */
   advance() {
-    this.currentLineNumber++;
-    this.currentCmd = this.file[this.currentLineNumber - 1]
+    if (this.currLineNumber === this.currFileLines) {
+      this.currFileIdx++;
+      this.currFile = this.files[this.currFileIdx];
+      this.currFileLines = this.currFile.length;
+      this.currLineNumber = 0;
+    }
+    this.currCmd = this.currFile[this.currLineNumber]
       .replace(/\s*\/\/.*/, '')
       .trim();
-    const [command, arg1, arg2] = this.currentCmd.split(' ');
+    const [command, arg1, arg2] = this.currCmd.split(' ');
     this.command = command;
     this.arg1 = arg1;
     this.arg2 = arg2;
+
+    this.currLineNumber++;
   }
+
+  nextFile() {}
 
   /* Returns a constant representing the type of the current command. 
   C_ARITHMETIC is returned for all the arithmetic/logical commands. */
   commandType() {
-    if (this.currentCmd === '') return 'BLANK';
+    if (this.currCmd === '') return 'BLANK';
 
     const { command } = this;
 
